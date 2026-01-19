@@ -1,0 +1,77 @@
+### DramaDash API - REST Client Examples
+### Use this file with REST Client extension in VS Code
+### or copy the curl commands to test in terminal
+
+@baseUrl = http://localhost:3000
+
+###############################################
+# 1. API Information
+###############################################
+GET {{baseUrl}}/ HTTP/1.1
+
+###############################################
+# 2. Get Home Page Data
+###############################################
+GET {{baseUrl}}/api/home HTTP/1.1
+
+###############################################
+# 3. Get Drama Details (Valid ID)
+###############################################
+GET {{baseUrl}}/api/drama/44
+
+###############################################
+# 4. Get Drama Details (Invalid ID - 404 Error)
+###############################################
+GET {{baseUrl}}/api/drama/99999 HTTP/1.1
+
+###############################################
+# 5. Search Dramas
+###############################################
+GET {{baseUrl}}/api/search?q=putri HTTP/1.1
+
+###############################################
+# 6. Search Dramas (Missing Query - 400 Error)
+###############################################
+GET {{baseUrl}}/api/search HTTP/1.1
+
+###############################################
+# 7. Get Episode Details
+###############################################
+GET {{baseUrl}}/api/drama/44/episode/1 HTTP/1.1
+
+###############################################
+# 8. Get Episode Details (Invalid Episode - 404 Error)
+###############################################
+GET {{baseUrl}}/api/drama/44/episode/999 HTTP/1.1
+
+###############################################
+# 9. Get Tabs Data
+###############################################
+GET {{baseUrl}}/api/tabs/2 HTTP/1.1
+
+###############################################
+# 10. Invalid Endpoint (404 Error)
+###############################################
+GET {{baseUrl}}/api/invalid HTTP/1.1
+
+###############################################
+# CURL Examples
+###############################################
+
+# API Info
+# curl http://localhost:3000/
+
+# Home Data
+# curl http://localhost:3000/api/home
+
+# Drama Details
+# curl http://localhost:3000/api/drama/44
+
+# Search
+# curl "http://localhost:3000/api/search?q=putri"
+
+# Episode
+# curl http://localhost:3000/api/drama/44/episode/1
+
+# Tabs
+# curl http://localhost:3000/api/tabs/2

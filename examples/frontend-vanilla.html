@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DramaDash - Vanilla JS Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      background: #fff;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    .tab-btn:hover {
+      background: #f0f0f0;
+    }
+    .tab-btn.active {
+      background: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+    .drama-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .drama-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+    }
+    .drama-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .drama-poster {
+      width: 100%;
+      aspect-ratio: 2/3;
+      object-fit: cover;
+    }
+    .drama-info {
+      padding: 12px;
+    }
+    .drama-name {
+      font-size: 16px;
+      font-weight: bold;
+      margin: 0 0 8px 0;
+      color: #333;
+    }
+    .drama-views {
+      color: #666;
+      font-size: 14px;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #666;
+    }
+    .error {
+      background: #ff4444;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎬 DramaDash</h1>
+  
+  <div id="error-container"></div>
+  
+  <!-- Tabs -->
+  <div id="tabs-container" class="tabs"></div>
+  
+  <!-- Loading State -->
+  <div id="loading" class="loading">Loading...</div>
+  
+  <!-- Drama Grid -->
+  <div id="drama-grid" class="drama-grid"></div>
+
+  <script>
+    // API Base URL
+    const API_BASE_URL = 'http://localhost:3000/api';
+
+    let currentData = null;
+
+    // Fetch data dari API
+    async function fetchHomeData() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/home`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        currentData = result.data;
+        
+        // Render tabs dan drama
+        renderTabs(result.tabs);
+        renderDramas(result.data.drama); // Default: tampilkan semua drama
+        
+        // Hide loading
+        document.getElementById('loading').style.display = 'none';
+        
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        showError(`Gagal memuat data: ${error.message}`);
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    // Render tabs
+    function renderTabs(tabs) {
+      const container = document.getElementById('tabs-container');
+      container.innerHTML = '';
+      
+      tabs.forEach((tab, index) => {
+        const button = document.createElement('button');
+        button.className = 'tab-btn';
+        button.textContent = tab.name;
+        
+        if (index === 0) {
+          button.classList.add('active');
+        }
+        
+        button.addEventListener('click', () => {
+          // Update active state
+          document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+          });
+          button.classList.add('active');
+          
+          // Load tab data
+          if (tab.id === null) {
+            // Tab "Populer" - tampilkan semua drama
+            renderDramas(currentData.drama);
+          } else {
+            // Load data dari tab tertentu
+            loadTabData(tab.id);
+          }
+        });
+        
+        container.appendChild(button);
+      });
+    }
+
+    // Load data untuk tab tertentu
+    async function loadTabData(tabId) {
+      try {
+        document.getElementById('loading').style.display = 'block';
+        
+        const response = await fetch(`${API_BASE_URL}/tabs/${tabId}`);
+        const result = await response.json();
+        
+        renderDramas(result.data || []);
+        document.getElementById('loading').style.display = 'none';
+        
+      } catch (error) {
+        console.error('Error loading tab data:', error);
+        showError(`Gagal memuat tab: ${error.message}`);
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    // Render drama cards
+    function renderDramas(dramas) {
+      const container = document.getElementById('drama-grid');
+      container.innerHTML = '';
+      
+      if (!dramas || dramas.length === 0) {
+        container.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">Tidak ada drama tersedia</p>';
+        return;
+      }
+      
+      dramas.forEach(drama => {
+        const card = document.createElement('div');
+        card.className = 'drama-card';
+        card.innerHTML = `
+          <img src="${drama.poster}" alt="${drama.name}" class="drama-poster" loading="lazy">
+          <div class="drama-info">
+            <h3 class="drama-name">${drama.name}</h3>
+            <p class="drama-views">👁️ ${drama.viewCount}</p>
+          </div>
+        `;
+        
+        // Click handler untuk detail drama
+        card.addEventListener('click', () => {
+          window.location.href = `/drama.html?id=${drama.id}`;
+        });
+        
+        container.appendChild(card);
+      });
+    }
+
+    // Show error message
+    function showError(message) {
+      const container = document.getElementById('error-container');
+      container.innerHTML = `<div class="error">${message}</div>`;
+    }
+
+    // Initialize app
+    fetchHomeData();
+  </script>
+</body>
+</html>
